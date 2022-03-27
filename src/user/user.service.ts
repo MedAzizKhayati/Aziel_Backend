@@ -1,11 +1,11 @@
-import { ConflictException, HttpException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UserSubscribeDto } from './dto/user-subscribe.dto';
 import { UserEntity } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { LoginCredentialsDto } from './dto/login-credentials.dto';
-import { UserRoleEnum } from '../enums/user-role.enum';
+
 @Injectable()
 export class UserService {
   constructor(
@@ -19,44 +19,44 @@ export class UserService {
     });
     user.salt = await bcrypt.genSalt();
     user.password = await bcrypt.hash(user.password, user.salt);
-    try {
-      await this.userRepository.save(user);
-    } catch (e) {
-    }
+
+    await this.userRepository.save(user);
+
     return {
-        id: user.id,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        role: user.role
-      };
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role
+    };
 
   }
 
-  async login(credentials: LoginCredentialsDto)  {
-
-     const {email, password} = credentials;
+  async login(credentials: LoginCredentialsDto) {
+    const { email, password } = credentials;
     
-    // Vérifier est ce qu'il y a un user avec ce login ou ce mdp
-    const user = await this.userRepository.createQueryBuilder("user")
-      .where(" user.email = :email",
-        {email}
-        )
-      .getOne();
-    console.log(user);
+    const user = await this.userRepository.findOne({ email });
 
     if (!user)
-      throw new NotFoundException('incorrect email or password  ');
-    // Si oui je vérifie est ce que le mot est correct ou pas
+      throw new NotFoundException('There is no account registered with this e-mail.');
+
     const hashedPassword = await bcrypt.hash(password, user.salt);
-    if (hashedPassword === user.password) {
-      const payload = {
+    if (hashedPassword === user.password)
+      return {
         email: user.email,
         role: user.role
-      };
-    } else {
-      // Si mot de passe incorrect je déclenche une erreur
-      throw new NotFoundException('incorrect email or password  ');
+      }
+    else
+      throw new NotFoundException('Incorrect email or password');
+  }
+
+  async getOneByEmail(email: string) {
+    const user = await this.userRepository.findOne({ email });
+    if(!user)
+      throw new NotFoundException('There is no account registered with this e-mail.');
+    return {
+      email: user.email,
+      role: user.role
     }
   }
 }
