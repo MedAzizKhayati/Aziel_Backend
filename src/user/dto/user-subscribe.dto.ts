@@ -13,7 +13,4 @@ export class UserSubscribeDto {
 
   @IsNotEmpty()
   lastName: string;
-
-  @IsNotEmpty()
-  phoneNumber: string;
 }

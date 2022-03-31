@@ -9,7 +9,7 @@ export class UserEntity extends TimestampEntities {
   id: number;
 
   @Column({
-    unique: true
+    unique: true,
   })
   email: string;
 
@@ -24,26 +24,25 @@ export class UserEntity extends TimestampEntities {
   @Column({
     type: 'enum',
     enum: UserRoleEnum,
-    default: UserRoleEnum.USER
+    default: UserRoleEnum.USER,
   })
   role: string;
 
   @Column({
-    length: 50
-  }) 
+    length: 50,
+  })
   firstName: string;
 
   @Column({
-    length: 50
+    length: 50,
   })
   lastName: string;
 
   @Column({
-    length: 50
+    length: 50,
   })
   phoneNumber: string;
 
-  @Column({
-  })
+  @Column({ nullable: true })
   hashedRt: string;
 }

@@ -11,18 +11,19 @@ import { RtStrategy } from './strategy/rt.strategy';
 
 dotenv.config();
 @Module({
-  imports:[TypeOrmModule.forFeature([UserEntity]),
-  PassportModule.register({
-    defaultStrategy: 'jwt'
-  }),
-  JwtModule.register({
+  imports: [
+    TypeOrmModule.forFeature([UserEntity]),
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+    }),
+    JwtModule.register({
       secret: process.env.SECRET,
       signOptions: {
-        expiresIn: 3600
-      }
-    })
-],
+        expiresIn: 3600,
+      },
+    }),
+  ],
   controllers: [UserController],
-  providers: [UserService, AtStrategy ,RtStrategy ]
+  providers: [UserService, AtStrategy, RtStrategy],
 })
 export class UserModule {}
