@@ -5,7 +5,7 @@ import { UserRoleEnum } from 'src/enums/user-role.enum';
 
 @Entity('user')
 export class UserEntity extends TimestampEntities {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: number;
 
   @Column({
@@ -30,7 +30,7 @@ export class UserEntity extends TimestampEntities {
 
   @Column({
     length: 50
-  })
+  }) 
   firstName: string;
 
   @Column({
@@ -41,6 +41,9 @@ export class UserEntity extends TimestampEntities {
   @Column({
     length: 50
   })
-  phonenumber: string;
+  phoneNumber: string;
 
+  @Column({
+  })
+  hashedRt: string;
 }
