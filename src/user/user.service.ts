@@ -17,6 +17,8 @@ import { JwtService } from '@nestjs/jwt';
 import { PayloadInterface } from './interfaces/payload.interface';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
+import { UserDTO } from './dto/user.dto';
+import { plainToClass } from 'class-transformer';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -124,28 +126,14 @@ export class UserService {
       role: user.role,
     };
   }
+
   async findAll(options = null): Promise<UserEntity[]> {
     if (options) {
       return await this.userRepository.find(options);
     }
     return await this.userRepository.find();
   }
-  /* async getUser() {
-     try {
-       const cookie = this.request.cookies['access_token'];
-       const data = this.jwtService.verify(cookie);
-       if (!data) {
-         throw new UnauthorizedException();
-       }
-       const user = await this.userRepository.findOne({ id: data['id'] });
- 
-       const { password, salt, ...result } = user;
- 
-       return result;
-     } catch (e) {
-       throw new UnauthorizedException();
-     }
-   }*/
+
   async logOut() {
     if (this?.request?.user) {
       await this.userRepository.update(
