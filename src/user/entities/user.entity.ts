@@ -45,4 +45,5 @@ export class UserEntity extends TimestampEntities {
 
   @Column({ nullable: true })
   hashedRt: string;
+    services: any;
 }
