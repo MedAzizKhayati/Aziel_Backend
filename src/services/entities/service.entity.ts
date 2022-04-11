@@ -7,10 +7,9 @@ import { UserEntity } from "src/user/entities/user.entity";
 export class ServicesEntity extends TimestampEntities {
 
     @PrimaryGeneratedColumn('uuid')
-    id: number;
+    id: string;
 
     @Column({
-        name: 'name',
         length: 50
     })
     title: string;
@@ -23,12 +22,13 @@ export class ServicesEntity extends TimestampEntities {
     @Column()
     path: string;
 
-    @Column({
+   /* @Column({
         type: 'enum',
         enum: serviceEnum,
         //default: serviceEnum.,
     })
-    category: string;
+    category: string;*/
+
     @ManyToOne(
         type => UserEntity,
         (user) => user.services,

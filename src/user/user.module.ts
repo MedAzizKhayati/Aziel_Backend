@@ -8,11 +8,13 @@ import { UserService } from './user.service';
 import * as dotenv from 'dotenv';
 import { AtStrategy } from './strategy/at.strategy';
 import { RtStrategy } from './strategy/rt.strategy';
+import { ServicesService } from 'src/services/services.service';
+import { ServicesEntity } from 'src/services/entities/service.entity';
 
 dotenv.config();
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity]),
+    TypeOrmModule.forFeature([UserEntity,ServicesEntity]),
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),
@@ -24,6 +26,6 @@ dotenv.config();
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, AtStrategy, RtStrategy],
+  providers: [UserService, AtStrategy, RtStrategy,ServicesService],
 })
 export class UserModule {}

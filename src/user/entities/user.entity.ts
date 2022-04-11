@@ -2,6 +2,7 @@ import { OneToMany, Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { TimestampEntities } from 'src/Generics/timestamp.entities';
 import { UserRoleEnum } from 'src/enums/user-role.enum';
+import { ServicesEntity } from 'src/services/entities/service.entity';
 
 @Entity('user')
 export class UserEntity extends TimestampEntities {
@@ -45,5 +46,15 @@ export class UserEntity extends TimestampEntities {
 
   @Column({ nullable: true })
   hashedRt: string;
-    services: any;
+  services: any;
+
+  @OneToMany(
+    type => ServicesEntity,
+    (service) => service.user,
+    {
+      nullable: true,
+      cascade: true
+    }
+  )
+  service: ServicesEntity[];
 }

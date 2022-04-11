@@ -6,42 +6,44 @@ import { ServicesEntity } from './entities/service.entity';
 
 @Controller('services')
 export class ServicesController {
-  constructor(private readonly servicesService: ServicesService) {}
+  constructor(private readonly servicesService: ServicesService) { }
 
   @Post()
-  create(@Body() createServiceDto: CreateServiceDto) :Promise<ServicesEntity>{
+  create(@Body() createServiceDto: CreateServiceDto): Promise<ServicesEntity> {
     return this.servicesService.create(createServiceDto);
   }
-
+  @Post('recover/:id')
+  async restoreService(
+    @Param('id') id: string,
+  ) {
+    return await this.servicesService.restoreService(id);
+  }
   @Get()
-  findAll() : Promise<ServicesEntity[]>{
+  findAll(): Promise<ServicesEntity[]> {
     return this.servicesService.findAll();
   }
 
+  
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.servicesService.findOne(+id);
+  findOne(@Param('id') id: string): Promise<ServicesEntity> {
+    return this.servicesService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateServiceDto: UpdateServiceDto) {
-    return this.servicesService.update(+id, updateServiceDto);
+  update(@Param('id') id: string, updateServiceDto: UpdateServiceDto) {
+    return this.servicesService.update(id, updateServiceDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.servicesService.remove(+id);
+    return this.servicesService.remove(id);
   }
   @Delete('soft/:id')
   async deleteService(
-    @Param('id') id: number,
+    @Param('id') id: string,
   ) {
-    return this.servicesService.softDeleteService(+id);
+    return this.servicesService.softDeleteService(id);
   }
-  @Get('recover/:id')
-  async restoreService(
-    @Param('id') id: number,
-  ) {
-    return await this.servicesService.restoreService(+id);
-  }
+
 }

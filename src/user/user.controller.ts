@@ -2,11 +2,12 @@ import {
   Body,
   Controller,
   Get,
+  HttpException,
+  HttpStatus,
+  Ip,
   Post,
   Query,
   Req,
-  Request,
-  Res,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -17,19 +18,41 @@ import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { UserEntity } from './entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { CastToUserDTO } from './interceptors/user.interceptor';
+import GoogleTokenDto from './dto/google-token.dto';
 
 @Controller('user')
 @UseInterceptors(new (CastToUserDTO))
 export class UserController {
   constructor(private userService: UserService) { }
-
+  /*@Post('/google/login')
+  async googleLogin(
+    @Body() body: GoogleTokenDto,
+    @Req() req,
+    @Ip() ip: string,
+  ) {
+    const result = await this.userService.loginGoogleUser(body.token, {
+      userAgent: req.headers['user-agent'],
+      ipAddress: ip,
+    });
+    if (result) {
+      return result;
+    } else {
+      throw new HttpException(
+        {
+          status: HttpStatus.UNAUTHORIZED,
+          error: 'Error while logging in with google',
+        },
+        HttpStatus.UNAUTHORIZED,
+      );
+    }
+  }*/ 
   @Get()
   getOneByEmail(@Query('email') email: string): Promise<any> {
     return this.userService.getOneByEmail(email);
   }
 
   @Post()
-  register(@Body() userData: UserSubscribeDto): Promise<any> {
+  register(@Body() userData:  UserSubscribeDto): Promise<any> {
     return this.userService.register(userData);
   }
 
@@ -46,8 +69,8 @@ export class UserController {
 
   @UseGuards(AuthGuard())
   @Get('me')
-  async user(@Req() req: any){
-    return {user: req.user};
+  async user(@Req() req: any) {
+    return { user: req.user };
   }
 
   @UseGuards(AuthGuard())

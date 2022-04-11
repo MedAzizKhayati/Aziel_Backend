@@ -19,6 +19,9 @@ import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
 import { UserDTO } from './dto/user.dto';
 import { plainToClass } from 'class-transformer';
+import { sendEmail } from 'src/utils/sendEmail';
+import { confirmEmailLink } from 'src/utils/confirmEmailLink';
+import { Auth, google } from 'googleapis';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -27,8 +30,27 @@ export class UserService {
     private userRepository: Repository<UserEntity>,
     private jwtService: JwtService,
     private config: ConfigService,
+    //private oauthClient: Auth.OAuth2Client,
     @Inject(REQUEST) private request,
-  ) {}
+  ) {
+    const clientId = process.env.GOOGLE_CLIENT_ID;
+    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+    //this.oauthClient = new google.auth.OAuth2(clientId, clientSecret);
+  }
+ /* async loginGoogleUser(
+    token: string,
+    values: { userAgent: string; ipAddress: string },
+  ) {
+    const tokenInfo = await this.oauthClient.getTokenInfo(token);
+    const email = tokenInfo.email;
+    const user = await this.userRepository.findOne({
+      where: {
+        email
+      },
+    });
+    return this.getTokens(user.id, email);
+  }
+*/
   async register(userData: UserSubscribeDto) {
     const user = this.userRepository.create(userData);
     user.salt = await bcrypt.genSalt();
@@ -37,6 +59,7 @@ export class UserService {
     await this.userRepository.save(user);
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
+    await sendEmail(user.email,user.firstName);
     delete user.salt;
     delete user.password;
     delete user.hashedRt;
@@ -100,7 +123,7 @@ export class UserService {
       };
     } else throw new NotFoundException('Incorrect email or password');
   }
-  
+
   async refreshTokens() {
     // Getting user from request, thanks to the guard.
     const user = this.request.user;
@@ -144,7 +167,7 @@ export class UserService {
           hashedRt: null,
         },
       );
-      return {"success" : "You've successfully logged out."};
+      return { "success": "You've successfully logged out." };
     }
     throw new UnauthorizedException();
   }
