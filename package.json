@@ -28,7 +28,7 @@
     "@nestjs/jwt": "^8.0.0",
     "@nestjs/mapped-types": "*",
     "@nestjs/passport": "^8.2.1",
-    "@nestjs/platform-express": "^8.0.0",
+    "@nestjs/platform-express": "^8.4.4",
     "@nestjs/typeorm": "^8.0.3",
     "argon": "^2.0.21",
     "argon2": "^0.28.5",
@@ -49,7 +49,8 @@
     "rimraf": "^3.0.2",
     "rxjs": "^7.2.0",
     "typeorm": "^0.2.45",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "uuidv4": "^6.2.13"
   },
   "devDependencies": {
     "@nestjs/cli": "^8.2.4",
@@ -58,6 +59,7 @@
     "@types/express": "^4.17.13",
     "@types/ioredis": "^4.28.10",
     "@types/jest": "27.4.1",
+    "@types/multer": "^1.4.7",
     "@types/node": "^16.11.26",
     "@types/nodemailer": "^6.4.4",
     "@types/passport-jwt": "^3.0.6",

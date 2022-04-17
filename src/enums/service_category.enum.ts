@@ -1,3 +1,3 @@
-export enum serviceEnum {
-    
-  }
+export enum ServiceEnum {
+  OTHER = "OTHER",
+}

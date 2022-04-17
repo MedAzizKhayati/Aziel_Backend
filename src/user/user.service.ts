@@ -22,6 +22,7 @@ import { plainToClass } from 'class-transformer';
 import { sendEmail } from 'src/utils/sendEmail';
 import { confirmEmailLink } from 'src/utils/confirmEmailLink';
 import { Auth, google } from 'googleapis';
+import { from, switchMap } from 'rxjs';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -170,5 +171,21 @@ export class UserService {
       return { "success": "You've successfully logged out." };
     }
     throw new UnauthorizedException();
+  }
+
+  updateOne(id: number, user)  {
+    delete user.email;
+    delete user.password;
+    delete user.role;
+    return from(this.userRepository.update(id, user)).pipe(
+        switchMap(() => this.findOne({
+          where: {
+            id
+          },
+        }))
+    );
+}
+  findOne(arg0: { where: { id: number; }; }): any {
+    throw new Error('Method not implemented.');
   }
 }

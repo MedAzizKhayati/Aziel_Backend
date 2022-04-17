@@ -48,6 +48,9 @@ export class UserEntity extends TimestampEntities {
   hashedRt: string;
   services: any;
 
+  @Column({nullable: true})
+    profileImage: string;
+    
   @OneToMany(
     type => ServicesEntity,
     (service) => service.user,

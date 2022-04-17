@@ -5,9 +5,12 @@ import {
   HttpException,
   HttpStatus,
   Ip,
+  Param,
   Post,
   Query,
   Req,
+  Res,
+  UploadedFile,
   UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
@@ -19,6 +22,23 @@ import { UserEntity } from './entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { CastToUserDTO } from './interceptors/user.interceptor';
 import GoogleTokenDto from './dto/google-token.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { map, Observable, of, tap } from 'rxjs';
+import path, { join } from 'path';
+import { diskStorage } from 'multer';
+
+export const storage = {
+  storage: diskStorage({
+      destination: './uploads/profileimages',
+      filename: (req, file, cb) => {
+          const filename: string = path.parse(file.originalname).name.replace(/\s/g, '') + uuidv4();
+          const extension: string = path.parse(file.originalname).ext;
+
+          cb(null, `${filename}${extension}`)
+      }
+  })
+
+}
 
 @Controller('user')
 @UseInterceptors(new (CastToUserDTO))
@@ -84,4 +104,23 @@ export class UserController {
   async refreshTokens() {
     return this.userService.refreshTokens();
   }
+  
+  @UseGuards(JwtAuthGuard)
+  @Post('upload')
+  @UseInterceptors(FileInterceptor('file', storage))
+  uploadFile(@UploadedFile() file, @Req() req): Observable<Object> {
+      const user = req.user;
+      return this.userService.updateOne(user.id, {profileImage: file.filename}).pipe(
+          tap((user: UserEntity) => console.log(user)),
+          map((user:UserEntity) => ({profileImage: user.profileImage}))
+      )
+  }
+  @Get('profile-image/:imagename')
+    findProfileImage(@Param('imagename') imagename, @Res() res): Observable<Object> {
+        return of(res.sendFile(join(process.cwd(), 'uploads/profileimages/' + imagename)));
+    }
 }
+function uuidv4() {
+  throw new Error('Function not implemented.');
+}
+
