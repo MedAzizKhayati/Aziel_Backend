@@ -9,6 +9,6 @@ export class CastToUserDTO implements NestInterceptor {
     intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
         return next
             .handle()
-            .pipe(map((data => data.user != null ? { ...data, user: plainToClass(UserDTO, data.user) } : data)));
+            .pipe(map((data => data?.user != null ? { ...data, user: plainToClass(UserDTO, data.user) } : data)));
     }
 }

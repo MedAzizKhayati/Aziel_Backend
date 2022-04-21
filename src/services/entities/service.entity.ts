@@ -1,14 +1,11 @@
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
-import { TimestampEntities } from 'src/Generics/timestamp.entities';
-import { ServiceEnum } from "src/enums/service_category.enum";
+import { Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from "typeorm";
+import { TimestampEntities } from 'src/generics/timestamp.entities';
 import { UserEntity } from "src/user/entities/user.entity";
+import { ServiceCategory } from "src/service_categories/entities/service_category.entity";
+import { Review } from "src/reviews/entities/review.entity";
 
 @Entity('services')
 export class ServicesEntity extends TimestampEntities {
-
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-
     @Column({
         length: 50
     })
@@ -20,26 +17,59 @@ export class ServicesEntity extends TimestampEntities {
     description: string;
 
     @Column()
-    path: string;
-
-    @Column()
-    status: string;
+    imagePath: string;
 
     @Column({
-        type: 'enum',
-        enum: ServiceEnum,
-        default: ServiceEnum.OTHER,
+        default: 0,
+        type: 'double'
     })
-    category: string;
+    rating: number;
+
+    @Column({
+        default: 0,
+        type: 'double'
+    })
+    price: number;
+
+    @Column({
+        default: 0
+    })
+    reviewsCount: number;
+
+    @Column({
+        default: true
+    })
+    isActive: boolean;
 
     @ManyToOne(
-        type => UserEntity,
-        (user) => user.services,
+        () => ServiceCategory,
+        serviceCategory => serviceCategory.services,
         {
             cascade: ['insert', 'update'],
             nullable: true,
+            eager: true,
+        }
+    )
+    category: ServiceCategory;
+
+    @ManyToOne(
+        () => UserEntity,
+        (user) => user.services,
+        {
+            nullable: false,
             eager: true
         }
     )
     user: UserEntity;
+
+    @OneToMany(
+        () => Review,
+        (review) => review.service,
+        {
+            cascade: ['insert', 'update'],
+            nullable: true,
+            eager: false
+        }
+    )
+    reviews: Review[];
 }

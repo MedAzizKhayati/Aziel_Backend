@@ -5,9 +5,17 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from './user/user.module';
 import { ServicesModule } from './services/services.module';
+import { ServiceCategoriesModule } from './service_categories/service_categories.module';
+import { MulterModule } from '@nestjs/platform-express';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -20,9 +28,13 @@ import { ServicesModule } from './services/services.module';
       database: process.env.DB_NAME,
       entities: ['dist/**/*.entity{.ts,.js}'],
       synchronize: true,
+      autoLoadEntities: true,
     }),
     UserModule,
     ServicesModule,
+    ServiceCategoriesModule,
+    ReviewsModule,
+    MulterModule.register({}),
   ],
   controllers: [AppController],
   providers: [AppService],

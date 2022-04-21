@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { ServiceCategory } from "src/service_categories/entities/service_category.entity";
 
 export class CreateServiceDto {
     @IsNotEmpty()
@@ -9,13 +10,10 @@ export class CreateServiceDto {
     @IsString()
     description: string;
 
-    @IsOptional()
     @IsString()
-    path: string;
+    categoryId: string;
 
-    // @IsNotEmpty()
-    @IsOptional()
-    @IsString()
-    category: string;
-
+    @IsNumber()
+    @IsNotEmpty()
+    price: number;
 }

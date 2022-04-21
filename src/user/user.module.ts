@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Global, Module } from '@nestjs/common';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,13 +8,13 @@ import { UserService } from './user.service';
 import * as dotenv from 'dotenv';
 import { AtStrategy } from './strategy/at.strategy';
 import { RtStrategy } from './strategy/rt.strategy';
-import { ServicesService } from 'src/services/services.service';
-import { ServicesEntity } from 'src/services/entities/service.entity';
 
 dotenv.config();
+
+@Global()
 @Module({
   imports: [
-    TypeOrmModule.forFeature([UserEntity,ServicesEntity]),
+    TypeOrmModule.forFeature([UserEntity]),
     PassportModule.register({
       defaultStrategy: 'jwt',
     }),
@@ -26,6 +26,7 @@ dotenv.config();
     }),
   ],
   controllers: [UserController],
-  providers: [UserService, AtStrategy, RtStrategy,ServicesService],
+  providers: [UserService, AtStrategy, RtStrategy],
+  exports: [UserService]
 })
 export class UserModule {}

@@ -2,9 +2,6 @@ import {
   Body,
   Controller,
   Get,
-  HttpException,
-  HttpStatus,
-  Ip,
   Param,
   Post,
   Query,
@@ -26,6 +23,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { map, Observable, of, tap } from 'rxjs';
 import path, { join } from 'path';
 import { diskStorage } from 'multer';
+import { RolesGuard } from './guards/roles.guard';
 
 export const storage = {
   storage: diskStorage({
@@ -81,19 +79,24 @@ export class UserController {
     return await this.userService.login(credentials);
   }
 
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard('jwt'))
+  @Get('me')
+  user(@Req() req: any) {
+    return { user: req.user };
+  }
+
+  @Get('/:id')
+  async getUserById(@Param('id') id: string): Promise<any> {
+    return this.userService.findOne(id);
+  }
+
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('all')
   findAll(@Req() req: any): Promise<UserEntity[]> {
     return this.userService.findAll();
   }
 
-  @UseGuards(AuthGuard())
-  @Get('me')
-  async user(@Req() req: any) {
-    return { user: req.user };
-  }
-
-  @UseGuards(AuthGuard())
+  @UseGuards(AuthGuard('jwt'))
   @Post('logout')
   logout() {
     return this.userService.logOut();

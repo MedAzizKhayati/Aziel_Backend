@@ -17,11 +17,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PayloadInterface } from './interfaces/payload.interface';
 import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
-import { UserDTO } from './dto/user.dto';
-import { plainToClass } from 'class-transformer';
 import { sendEmail } from 'src/utils/sendEmail';
-import { confirmEmailLink } from 'src/utils/confirmEmailLink';
-import { Auth, google } from 'googleapis';
 import { from, switchMap } from 'rxjs';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -38,20 +34,20 @@ export class UserService {
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     //this.oauthClient = new google.auth.OAuth2(clientId, clientSecret);
   }
- /* async loginGoogleUser(
-    token: string,
-    values: { userAgent: string; ipAddress: string },
-  ) {
-    const tokenInfo = await this.oauthClient.getTokenInfo(token);
-    const email = tokenInfo.email;
-    const user = await this.userRepository.findOne({
-      where: {
-        email
-      },
-    });
-    return this.getTokens(user.id, email);
-  }
-*/
+  /* async loginGoogleUser(
+     token: string,
+     values: { userAgent: string; ipAddress: string },
+   ) {
+     const tokenInfo = await this.oauthClient.getTokenInfo(token);
+     const email = tokenInfo.email;
+     const user = await this.userRepository.findOne({
+       where: {
+         email
+       },
+     });
+     return this.getTokens(user.id, email);
+   }
+ */
   async register(userData: UserSubscribeDto) {
     const user = this.userRepository.create(userData);
     user.salt = await bcrypt.genSalt();
@@ -60,7 +56,7 @@ export class UserService {
     await this.userRepository.save(user);
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
-    await sendEmail(user.email,user.firstName);
+    await sendEmail(user.email, user.firstName);
     delete user.salt;
     delete user.password;
     delete user.hashedRt;
@@ -71,7 +67,7 @@ export class UserService {
     };
   }
 
-  async getTokens(userId: number, email: string) {
+  async getTokens(userId: string, email: string) {
     const jwtPayload: PayloadInterface = {
       sub: userId,
       email: email,
@@ -94,7 +90,7 @@ export class UserService {
     };
   }
 
-  async updateRtHash(id: number, rt: string) {
+  async updateRtHash(id: string, rt: string) {
     const hash = await argon.hash(rt);
     const user = { hashedRt: hash };
     return this.userRepository.update(id, user);
@@ -173,19 +169,57 @@ export class UserService {
     throw new UnauthorizedException();
   }
 
-  updateOne(id: number, user)  {
+  updateOne(id: string, user) {
     delete user.email;
     delete user.password;
     delete user.role;
     return from(this.userRepository.update(id, user)).pipe(
-        switchMap(() => this.findOne({
-          where: {
-            id
-          },
-        }))
+      switchMap(() => this.findOne(id))
     );
-}
-  findOne(arg0: { where: { id: number; }; }): any {
-    throw new Error('Method not implemented.');
+  }
+  findOne(id: string): any {
+    return this.userRepository.findOne(id);
+  }
+
+  decrementReviewsAsAseller(id: string) {
+    const query = this.userRepository.createQueryBuilder()
+      .update(UserEntity)
+      .set({
+        reviewsCountAsSeller: () => "reviewsCountAsSeller - 1"
+      })
+      .where("id = :id", { id: id })
+      .andWhere("reviewsCountAsSeller > 0")
+    return query.execute();
+  }
+
+  incrementReviewsAsAseller(id: string) {
+    const query = this.userRepository.createQueryBuilder()
+      .update(UserEntity)
+      .set({
+        reviewsCountAsSeller: () => "reviewsCountAsSeller + 1"
+      })
+      .where("id = :id", { id: id })
+    return query.execute();
+  }
+
+  decrementReviewsAsAbuyer(id: string) {
+    const query = this.userRepository.createQueryBuilder()
+      .update(UserEntity)
+      .set({
+        reviewsCountAsBuyer: () => "reviewsCountAsBuyer - 1"
+      })
+      .where("id = :id", { id: id })
+      .andWhere("reviewsCountAsBuyer > 0")
+    return query.execute();
+  }
+
+  incrementReviewsAsAbuyer(id: string) {
+    const query = this.userRepository.createQueryBuilder()
+      .update(UserEntity)
+      .set({
+        reviewsCountAsBuyer: () => "reviewsCountAsBuyer + 1"
+      })
+      .where("id = :id", { id: id })
+    return query.execute();
   }
 }

@@ -1,6 +1,9 @@
-import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn } from 'typeorm';
+import { CreateDateColumn, UpdateDateColumn, DeleteDateColumn, PrimaryGeneratedColumn } from 'typeorm';
 
 export class TimestampEntities {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
+
   @CreateDateColumn({
     update: false,
   })
