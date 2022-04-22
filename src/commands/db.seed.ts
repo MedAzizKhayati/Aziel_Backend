@@ -8,6 +8,7 @@ import { CreateReviewDto } from 'src/reviews/dto/create-review.dto';
 import * as casual from 'casual';
 import { AppModule } from 'src/app.module';
 import { UserService } from '../user/user.service';
+import { CreateServiceCategoryDto } from 'src/service_categories/dto/create-service_category.dto';
 
 
 async function bootstrap() {
@@ -30,8 +31,16 @@ async function bootstrap() {
     const users = await userService.findAll();
     console.log('Users Loaded Successfully....');
 
+    // Seed categories
+    for (let i = 1; i < 5; i++) {
+        const category = new CreateServiceCategoryDto();
+        category.title = casual.title;
+        category.description = casual.description;
+        await serviceCategoryService.create(category);
+    }
+    
     const categories = await serviceCategoryService.findAll();
-    console.log('Categories Loaded Successfully....');
+    console.log('Categories Loaded Successfully....'); 
 
     // Seed Services.
     for (let i = 1; i < 50; i++) {
