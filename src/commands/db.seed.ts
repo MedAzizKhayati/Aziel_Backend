@@ -36,14 +36,14 @@ async function bootstrap() {
         const category = new CreateServiceCategoryDto();
         category.title = casual.title;
         category.description = casual.description;
-        await serviceCategoryService.create(category);
+        // await serviceCategoryService.create(category);
     }
-    
+
     const categories = await serviceCategoryService.findAll();
-    console.log('Categories Loaded Successfully....'); 
+    console.log('Categories Loaded Successfully....');
 
     // Seed Services.
-    for (let i = 1; i < 50; i++) {
+    for (let i = 1; i < 2000; i++) {
         const service = new CreateServiceDto();
         const user = users[casual.integer(0, users.length - 1)];
         service.title = casual.title;
@@ -52,13 +52,12 @@ async function bootstrap() {
         service.categoryId = categories[casual.integer(0, categories.length - 1)].id;
         await servicesService.create(service, user);
     }
-    const services = await servicesService.findAll();
+    const services = await servicesService.findAll(10_000);
 
     console.log('Services seeded successfully....');
 
-
     // Seed reviews
-    for (let i = 1; i < 500; i++) {
+    for (let i = 1; i < 10_000; i++) {
         const review = new CreateReviewDto();
         const service = services[casual.integer(0, services.length - 1)];
         review.rating = casual.integer(9, 10) / 2;
@@ -70,14 +69,14 @@ async function bootstrap() {
             owner = users[casual.integer(0, users.length - 1)];
         await reviewsService.create(review, owner);
     }
-    
+
     // const reviews = await reviewsService.findAll();
     // for(const review of reviews){
     //     await reviewsService.remove(review.id);
     // }
 
     console.log('Reviews seeded successfully....');
-    
+
     await app.close();
 }
 

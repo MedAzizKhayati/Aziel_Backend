@@ -66,6 +66,15 @@ export class ServicesController {
     return this.servicesService.findAll(+limit, +page);
   }
 
+  @Get('search/:query/?:limit/?:page')
+  async search(
+    @Param('query') query: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+  ) {
+    return this.servicesService.search(query, +limit, +page);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string): Promise<ServicesEntity> {
     return this.servicesService.findOne(id);

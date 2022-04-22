@@ -3,10 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isNumber } from 'class-validator';
 import { round } from 'src/generics/helpers';
 import { Review } from 'src/reviews/entities/review.entity';
+import { ReviewsService } from 'src/reviews/reviews.service';
 import { ServiceCategoriesService } from 'src/service_categories/service_categories.service';
 import { UserEntity } from 'src/user/entities/user.entity';
 import { UserRoleEnum } from 'src/user/enums/user-role.enum';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { CreateServiceDto } from './dto/create-service.dto';
 import { UpdateServiceDto } from './dto/update-service.dto';
 import { ServicesEntity } from './entities/service.entity';
@@ -16,9 +17,11 @@ export class ServicesService {
   constructor(
     @InjectRepository(ServicesEntity)
     private servicesRepository: Repository<ServicesEntity>,
-    private serviceCategoriesRepository: ServiceCategoriesService,
+    @InjectRepository(Review)
+    private reviewsRepository: Repository<Review>,
+    private serviceCategoriesRepository: ServiceCategoriesService
   ) { }
-  
+
   async create(createServiceDto: CreateServiceDto, user: UserEntity): Promise<ServicesEntity> {
     const newService = this.servicesRepository.create({ ...createServiceDto, user });
     newService.category =
@@ -28,40 +31,50 @@ export class ServicesService {
     return await this.servicesRepository.save(newService);
   }
 
-  async findByCategory(categoryId: string,take: number = 10, page : number = 1): Promise<ServicesEntity[]> {
-    return await this.servicesRepository.find({
-      where: { category: { id: categoryId } },
-      take,
-      skip: (page - 1) * take,
-    });
-  }
-
-  async findByUser(userId: string, take: number = 10, page : number = 1): Promise<ServicesEntity[]> {
-    return await this.servicesRepository.find({
-      where: { user: { id: userId } },
-      take,
-      skip: (page - 1) * take,
-    });
-  }
-
-  async findPopular(take: number = 10, page : number = 1) {
-    if(!take || !isNumber(take) || take < 0)
+  async findByCondition(condition: any, take: number = 10, page: number = 1): Promise<ServicesEntity[]> {
+    if (!take || !isNumber(take) || take < 0)
       take = 10;
-      
+    if (!page || !isNumber(page) || page < 1)
+      page = 1;
     return await this.servicesRepository.find({
-      order: {
-        reviewsCount: 'DESC',
-      },
+      where: condition,
       take,
       skip: (page - 1) * take,
     });
   }
 
-  async findAll(take: number = 15, page : number = 1) {
+  findByCategory(categoryId: string, take: number = 10, page: number = 1): Promise<ServicesEntity[]> {
+    return this.findByCondition({ category: { id: categoryId } }, take, page);
+  }
+
+  findByUser(userId: string, take: number = 10, page: number = 1): Promise<ServicesEntity[]> {
+    return this.findByCondition({ user: { id: userId } }, take, page);
+  }
+
+  findPopular(take: number = 10, page: number = 1) {
     return this.servicesRepository.find({
       take,
       skip: (page - 1) * take,
+      order: {
+        reviewsCount: 'DESC'
+      }
     });
+  }
+
+  async findAll(take: number = 10, page: number = 1): Promise<ServicesEntity[]> {
+    return this.findByCondition({}, take, page);
+  }
+
+  search(query: string, take: number = 10, page: number = 1) {
+    if(!query) return [];
+    return this.findByCondition(
+      [
+        { title: Like(`%${query}%`) },
+        { description: Like(`%${query}%`) },
+      ],
+      take,
+      page
+    );
   }
 
   async findOne(id: string): Promise<ServicesEntity> {
@@ -84,6 +97,7 @@ export class ServicesService {
   }
 
   async remove(id: string) {
+    await this.reviewsRepository.delete({ service: { id } });
     return await this.servicesRepository.delete(id);
   }
 
@@ -93,7 +107,6 @@ export class ServicesService {
         id
       },
     });
-    console.log('service', service);
     if (!service) {
       throw new NotFoundException('');
     }
