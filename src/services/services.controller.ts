@@ -34,23 +34,21 @@ export class ServicesController {
     return await this.servicesService.restoreService(id);
   }
 
-  @Get()
-  findAll(): Promise<ServicesEntity[]> {
-    return this.servicesService.findAll();
-  }
-
-  @Get('popular/:limit')
+  @Get('popular/?:limit/?:page')
   async getPopularServices(
     @Param('limit') limit: number,
+    @Param('page') page: number,
   ) {
-    return await this.servicesService.findPopular(+limit);
+    return await this.servicesService.findPopular(+limit, +page);
   }
 
-  @Get('category/:id')
+  @Get('category/:id/?:limit/?:page')
   findByCategory(
-    @Param('id') id: string
+    @Param('id') id: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
   ): Promise<ServicesEntity[]> {
-    return this.servicesService.findByCategory(id);
+    return this.servicesService.findByCategory(id, +limit, +page);
   }
 
   @Get('user/:id')
@@ -60,6 +58,13 @@ export class ServicesController {
     return this.servicesService.findByUser(id);
   }
 
+  @Get('all/?:limit/?:page')
+  findAll(
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+  ): Promise<ServicesEntity[]> {
+    return this.servicesService.findAll(+limit, +page);
+  }
 
   @Get(':id')
   findOne(@Param('id') id: string): Promise<ServicesEntity> {

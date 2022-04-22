@@ -18,6 +18,7 @@ export class ServicesService {
     private servicesRepository: Repository<ServicesEntity>,
     private serviceCategoriesRepository: ServiceCategoriesService,
   ) { }
+  
   async create(createServiceDto: CreateServiceDto, user: UserEntity): Promise<ServicesEntity> {
     const newService = this.servicesRepository.create({ ...createServiceDto, user });
     newService.category =
@@ -27,19 +28,23 @@ export class ServicesService {
     return await this.servicesRepository.save(newService);
   }
 
-  async findByCategory(categoryId: string): Promise<ServicesEntity[]> {
+  async findByCategory(categoryId: string,take: number = 10, page : number = 1): Promise<ServicesEntity[]> {
     return await this.servicesRepository.find({
       where: { category: { id: categoryId } },
+      take,
+      skip: (page - 1) * take,
     });
   }
 
-  async findByUser(userId: string): Promise<ServicesEntity[]> {
+  async findByUser(userId: string, take: number = 10, page : number = 1): Promise<ServicesEntity[]> {
     return await this.servicesRepository.find({
       where: { user: { id: userId } },
+      take,
+      skip: (page - 1) * take,
     });
   }
 
-  async findPopular(take: number = 10) {
+  async findPopular(take: number = 10, page : number = 1) {
     if(!take || !isNumber(take) || take < 0)
       take = 10;
       
@@ -48,11 +53,15 @@ export class ServicesService {
         reviewsCount: 'DESC',
       },
       take,
+      skip: (page - 1) * take,
     });
   }
 
-  async findAll() {
-    return this.servicesRepository.find();
+  async findAll(take: number = 15, page : number = 1) {
+    return this.servicesRepository.find({
+      take,
+      skip: (page - 1) * take,
+    });
   }
 
   async findOne(id: string): Promise<ServicesEntity> {

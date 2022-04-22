@@ -1,3 +1,4 @@
+import { SelectQueryBuilder } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
 // This function gets a string and capitializes each word in the string. (Ex. "hello world" => "Hello World")
@@ -17,7 +18,7 @@ export const editFileName = (req, file, callback) => {
 
 // This function filters out files that are not images.
 export const imageFileFilter = (req, file, callback) => {
-    if(!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|gif)$/)) {
         return callback(new Error('Only image files are allowed!'), false);
     }
     callback(null, true);
@@ -26,4 +27,18 @@ export const imageFileFilter = (req, file, callback) => {
 export function round(value: number, precision: number = 1) {
     var multiplier = Math.pow(10, precision || 0);
     return Math.round(value * multiplier) / multiplier;
+}
+
+export function paginate(
+    qb: SelectQueryBuilder<any>,
+    page?: number,
+    number?: number,
+) {
+    console.log('i am paginating', page, number);
+
+    if (number) {
+        if (!page) page = 1;
+        qb.skip((page - 1) * number);
+        qb.take(number);
+    }
 }
