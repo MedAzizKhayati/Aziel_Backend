@@ -83,7 +83,7 @@ export class UserController {
   @Get('me')
   user(@Req() req: any) {
     return { user: req.user };
-  }
+  }   
 
   @Get('/:id')
   async getUserById(@Param('id') id: string): Promise<any> {
