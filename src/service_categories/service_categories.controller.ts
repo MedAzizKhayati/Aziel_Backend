@@ -12,10 +12,11 @@ import { UserRoleEnum } from 'src/user/enums/user-role.enum';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('service-categories')
-export class ServiceCategoriesController {
+export class ServiceCategoriesController { 
   constructor(private readonly serviceCategoriesService: ServiceCategoriesService) { }
 
   @Post()
+  @Roles(UserRoleEnum.ADMIN)
   create(@Body() createServiceCategoryDto: CreateServiceCategoryDto) {
     return this.serviceCategoriesService.create(createServiceCategoryDto);
   }
