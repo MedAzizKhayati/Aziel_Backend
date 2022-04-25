@@ -10,6 +10,7 @@ import { MulterModule } from '@nestjs/platform-express';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ReviewsModule } from './reviews/reviews.module';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { ReviewsModule } from './reviews/reviews.module';
     ServicesModule,
     ServiceCategoriesModule,
     ReviewsModule,
+    MessagesModule,
     MulterModule.register({}),
   ],
   controllers: [AppController],

@@ -1,8 +1,7 @@
-import { round } from "src/generics/helpers";
 import { TimestampEntities } from "src/generics/timestamp.entities";
 import { ServicesEntity } from "src/services/entities/service.entity";
 import { UserEntity } from "src/user/entities/user.entity";
-import { BeforeInsert, BeforeRecover, Column, Entity, ManyToOne } from "typeorm";
+import { Column, Entity, ManyToOne } from "typeorm";
 
 @Entity('reviews')
 export class Review extends TimestampEntities {
@@ -11,7 +10,7 @@ export class Review extends TimestampEntities {
     })
     rating: number;
 
-    @Column()
+    @Column("text")
     comment: string;
 
     @ManyToOne(

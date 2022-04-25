@@ -44,6 +44,14 @@ export class ReviewsService {
     return this.reviewsRepository.save(review);
   }
 
+  findByCondition(condition: any, page: number, limit: number) {
+    return this.reviewsRepository.find({
+      where: condition,
+      skip: limit * (page - 1),
+      take: limit,
+    });
+  }
+
   findAll() {
     return this.reviewsRepository.find();
   }
@@ -69,5 +77,9 @@ export class ReviewsService {
       await this.userService.decrementReviewsAsAbuyer(review.target.id);
 
     return await this.reviewsRepository.delete(id);
+  }
+
+  deleteByContition(condition: any) {
+    return this.reviewsRepository.delete(condition);
   }
 }

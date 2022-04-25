@@ -1,7 +1,8 @@
 # compiled output
 /dist
 /node_modules
-/public
+/public/*
+!/public/images
 
 # Logs
 logs
