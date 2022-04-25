@@ -83,18 +83,19 @@ export class UserController {
   @Get('me')
   user(@Req() req: any) {
     return { user: req.user };
-  }   
-
-  @Get('/:id')
-  async getUserById(@Param('id') id: string): Promise<any> {
-    return this.userService.findOne(id);
-  }
+  } 
 
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Get('all')
   findAll(@Req() req: any): Promise<UserEntity[]> {
     return this.userService.findAll();
   }
+
+  @Get('/:id')
+  async getUserById(@Param('id') id: string): Promise<any> {
+    return this.userService.findOne(id);
+  }
+
 
   @UseGuards(AuthGuard('jwt'))
   @Post('logout')
