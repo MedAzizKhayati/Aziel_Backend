@@ -80,9 +80,18 @@ export class MessagesService {
   }
 
   async getUnreadMessagesCount(userId: string) {
-    const res = await this.messagesRepository.createQueryBuilder()
+    const res = await this.messagesRepository.createQueryBuilder("message")
       .select('COUNT(DISTINCT chatId)', 'count')
-      .where('targetId = :userId AND seen = false', { userId })
+      .where(`
+          targetId = :userId 
+          AND seen = false 
+          AND createdAt = (
+            select MAX(createdAt) 
+            from messages as m 
+            where m.chatId = message.chatId
+          )`,
+        { userId }
+      )
       .getRawOne();
     return res;
   }
