@@ -7,6 +7,8 @@ import { editFileName, imageFileFilter } from 'src/generics/helpers';
 import { diskStorage } from 'multer';
 import { RolesGuard } from 'src/user/guards/roles.guard';
 import { AuthGuard } from '@nestjs/passport';
+import { Roles } from '../user/decorators/roles.metadata';
+import { UserRoleEnum } from 'src/user/enums/user-role.enum';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
 @Controller('service-categories')

@@ -5,6 +5,7 @@ import { UserRoleEnum } from 'src/user/enums/user-role.enum';
 import { ServicesEntity } from 'src/services/entities/service.entity';
 import { capitalizeWords } from 'src/generics/helpers';
 import { Review } from 'src/reviews/entities/review.entity';
+import { OrdersEntity } from 'src/orders/entities/order.entity';
 
 @Entity('user')
 export class UserEntity extends TimestampEntities {
@@ -60,6 +61,16 @@ export class UserEntity extends TimestampEntities {
     }
   )
   services: ServicesEntity[];
+
+  @OneToMany(
+    type => OrdersEntity,
+    order => order.buyer,
+    {
+      nullable: true,
+      cascade: true
+    }
+  )
+  orders: OrdersEntity[];
 
   @OneToMany(
     () => Review,

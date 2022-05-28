@@ -3,6 +3,7 @@ import { TimestampEntities } from 'src/generics/timestamp.entities';
 import { UserEntity } from "src/user/entities/user.entity";
 import { ServiceCategory } from "src/service_categories/entities/service_category.entity";
 import { Review } from "src/reviews/entities/review.entity";
+import { OrdersEntity } from "src/orders/entities/order.entity";
 
 @Entity('services')
 export class ServicesEntity extends TimestampEntities {
@@ -72,4 +73,15 @@ export class ServicesEntity extends TimestampEntities {
         }
     )
     reviews: Review[];
+
+    @OneToMany(
+        type => OrdersEntity,
+        order => order.service,
+        {
+          nullable: true,
+          cascade: true
+        }
+      )
+      orders: OrdersEntity[];
+    
 }
