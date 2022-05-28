@@ -37,33 +37,11 @@ export const storage = {
   })
 
 }
-
 @Controller('user')
 @UseInterceptors(new (CastToUserDTO))
 export class UserController {
   constructor(private userService: UserService) { }
-  /*@Post('/google/login')
-  async googleLogin(
-    @Body() body: GoogleTokenDto,
-    @Req() req,
-    @Ip() ip: string,
-  ) {
-    const result = await this.userService.loginGoogleUser(body.token, {
-      userAgent: req.headers['user-agent'],
-      ipAddress: ip,
-    });
-    if (result) {
-      return result;
-    } else {
-      throw new HttpException(
-        {
-          status: HttpStatus.UNAUTHORIZED,
-          error: 'Error while logging in with google',
-        },
-        HttpStatus.UNAUTHORIZED,
-      );
-    }
-  }*/ 
+ 
   @Get()
   getOneByEmail(@Query('email') email: string): Promise<any> {
     return this.userService.getOneByEmail(email);

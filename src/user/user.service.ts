@@ -19,6 +19,8 @@ import { ConfigService } from '@nestjs/config';
 import { REQUEST } from '@nestjs/core';
 import { sendEmail } from 'src/utils/sendEmail';
 import { from, switchMap } from 'rxjs';
+import { round } from 'src/generics/helpers';
+import { Review } from 'src/reviews/entities/review.entity';
 
 @Injectable({ scope: Scope.REQUEST })
 export class UserService {
@@ -181,6 +183,11 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
+  incrementReviewsAsAseller(user: UserEntity, review: Review) {
+    user.ratingAsSeller = round((user.ratingAsSeller * user.reviewsCountAsSeller++ + review.rating) / user.reviewsCountAsSeller);
+    return this.userRepository.save(user);
+  }
+  
   decrementReviewsAsAseller(id: string) {
     const query = this.userRepository.createQueryBuilder()
       .update(UserEntity)
@@ -189,16 +196,6 @@ export class UserService {
       })
       .where("id = :id", { id: id })
       .andWhere("reviewsCountAsSeller > 0")
-    return query.execute();
-  }
-
-  incrementReviewsAsAseller(id: string) {
-    const query = this.userRepository.createQueryBuilder()
-      .update(UserEntity)
-      .set({
-        reviewsCountAsSeller: () => "reviewsCountAsSeller + 1"
-      })
-      .where("id = :id", { id: id })
     return query.execute();
   }
 
@@ -213,13 +210,8 @@ export class UserService {
     return query.execute();
   }
 
-  incrementReviewsAsAbuyer(id: string) {
-    const query = this.userRepository.createQueryBuilder()
-      .update(UserEntity)
-      .set({
-        reviewsCountAsBuyer: () => "reviewsCountAsBuyer + 1"
-      })
-      .where("id = :id", { id: id })
-    return query.execute();
+  incrementReviewsAsAbuyer(user: UserEntity, review: Review) {
+    user.ratingAsBuyer = round((user.ratingAsBuyer * user.reviewsCountAsBuyer++ + review.rating) / user.reviewsCountAsBuyer);
+    return this.userRepository.save(user);
   }
 }

@@ -2,7 +2,7 @@
 /dist
 /node_modules
 /public/*
-!/public/images
+!/public/static
 
 # Logs
 logs
