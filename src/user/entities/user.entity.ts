@@ -45,6 +45,24 @@ export class UserEntity extends TimestampEntities {
   })
   phoneNumber: string;
 
+  @Column({
+    default: 100,
+    type: 'double',
+  })
+  balance: number;
+
+  @Column({
+    default: 0,
+    type: 'double',
+  })
+  ratingAsSeller: number;
+
+  @Column({
+    default: 0,
+    type: 'double',
+  })
+  ratingAsBuyer: number;
+
   @Column({ nullable: true })
   hashedRt: string;
 

@@ -36,10 +36,10 @@ export class ReviewsService {
 
     if (review.service) {
       await this.serviceService.addReview(review.service, review);
-      const res = await this.userService.incrementReviewsAsAseller(review.target.id);
+      const res = await this.userService.incrementReviewsAsAseller(review.target, review);
     }
     else {
-      await this.userService.incrementReviewsAsAbuyer(review.target.id);
+      await this.userService.incrementReviewsAsAbuyer(review.target, review);
     }
     return this.reviewsRepository.save(review);
   }

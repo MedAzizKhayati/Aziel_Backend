@@ -50,24 +50,28 @@ async function bootstrap() {
         service.description = casual.description;
         service.price = casual.integer(10, 500);
         service.categoryId = categories[casual.integer(0, categories.length - 1)].id;
-        await servicesService.create(service, user);
+        // await servicesService.create(service, user);
     }
     const services = await servicesService.findAll(10_000);
 
     console.log('Services seeded successfully....');
 
     // Seed reviews
-    for (let i = 1; i < 10_000; i++) {
+    const count = 5_000
+    for (let i = 1; i < count; i++) {
         const review = new CreateReviewDto();
         const service = services[casual.integer(0, services.length - 1)];
-        review.rating = casual.integer(9, 10) / 2;
+        review.rating = casual.integer(8, 10) / 2;
         review.comment = casual.description;
         review.serviceId = service.id;
         review.targetId = service.user.id;
         let owner = users[casual.integer(0, users.length - 1)];
         while (owner.id == service.user.id)
             owner = users[casual.integer(0, users.length - 1)];
-        await reviewsService.create(review, owner);
+        if (i == count - 1)
+            await reviewsService.create(review, owner);
+        else
+            reviewsService.create(review, owner);
     }
 
     // const reviews = await reviewsService.findAll();

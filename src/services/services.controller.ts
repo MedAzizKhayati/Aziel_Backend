@@ -51,11 +51,13 @@ export class ServicesController {
     return this.servicesService.findByCategory(id, +limit, +page);
   }
 
-  @Get('user/:id')
+  @Get('user/:id/?:limit/?:page')
   findByUser(
     @Param('id') id: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
   ): Promise<ServicesEntity[]> {
-    return this.servicesService.findByUser(id);
+    return this.servicesService.findByUser(id, +limit, +page);
   }
 
   @Get('all/?:limit/?:page')
