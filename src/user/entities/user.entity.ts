@@ -5,6 +5,7 @@ import { UserRoleEnum } from 'src/user/enums/user-role.enum';
 import { ServicesEntity } from 'src/services/entities/service.entity';
 import { capitalizeWords } from 'src/generics/helpers';
 import { Review } from 'src/reviews/entities/review.entity';
+import * as bcrypt from 'bcrypt';
 
 @Entity('user')
 export class UserEntity extends TimestampEntities {
@@ -66,7 +67,10 @@ export class UserEntity extends TimestampEntities {
   @Column({ nullable: true })
   hashedRt: string;
 
-  @Column({ nullable: true })
+  @Column({ 
+    nullable: false,
+    default: "",
+  })
   profileImage: string;
 
   @OneToMany(
@@ -105,7 +109,7 @@ export class UserEntity extends TimestampEntities {
     default: 0,
   })
   reviewsCountAsBuyer: number;
-  
+
   @Column({
     default: 0,
   })
@@ -116,5 +120,14 @@ export class UserEntity extends TimestampEntities {
   async capitalizeName() {
     this.firstName = capitalizeWords(this.firstName);
     this.lastName = capitalizeWords(this.lastName);
+  }
+
+  @BeforeUpdate()
+  @BeforeInsert()
+  async hashPassword() {
+    if (this.password) {
+      this.salt = await bcrypt.genSalt(10);
+      this.password = await bcrypt.hash(this.password, this.salt);
+    }
   }
 }

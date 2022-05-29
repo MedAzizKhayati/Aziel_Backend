@@ -1,9 +1,7 @@
 import {
   ForbiddenException,
-  Inject,
   Injectable,
   NotFoundException,
-  Scope,
   UnauthorizedException,
 } from '@nestjs/common';
 import { UserSubscribeDto } from './dto/user-subscribe.dto';
@@ -16,52 +14,25 @@ import { LoginCredentialsDto } from './dto/login-credentials.dto';
 import { JwtService } from '@nestjs/jwt';
 import { PayloadInterface } from './interfaces/payload.interface';
 import { ConfigService } from '@nestjs/config';
-import { REQUEST } from '@nestjs/core';
 import { sendEmail } from 'src/utils/sendEmail';
-import { from, switchMap } from 'rxjs';
 import { round } from 'src/generics/helpers';
 import { Review } from 'src/reviews/entities/review.entity';
 
-@Injectable({ scope: Scope.REQUEST })
+@Injectable()
 export class UserService {
   constructor(
     @InjectRepository(UserEntity)
     private userRepository: Repository<UserEntity>,
     private jwtService: JwtService,
     private config: ConfigService,
-    //private oauthClient: Auth.OAuth2Client,
-    @Inject(REQUEST) private request,
-  ) {
-    const clientId = process.env.GOOGLE_CLIENT_ID;
-    const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
-    //this.oauthClient = new google.auth.OAuth2(clientId, clientSecret);
-  }
-  /* async loginGoogleUser(
-     token: string,
-     values: { userAgent: string; ipAddress: string },
-   ) {
-     const tokenInfo = await this.oauthClient.getTokenInfo(token);
-     const email = tokenInfo.email;
-     const user = await this.userRepository.findOne({
-       where: {
-         email
-       },
-     });
-     return this.getTokens(user.id, email);
-   }
- */
+  ) { }
+
   async register(userData: UserSubscribeDto) {
     const user = this.userRepository.create(userData);
-    user.salt = await bcrypt.genSalt();
-    user.password = await bcrypt.hash(user.password, user.salt);
-
     await this.userRepository.save(user);
     const tokens = await this.getTokens(user.id, user.email);
     await this.updateRtHash(user.id, tokens.refresh_token);
     await sendEmail(user.email, user.firstName);
-    delete user.salt;
-    delete user.password;
-    delete user.hashedRt;
     return {
       user: user,
       refresh_token: tokens.refresh_token,
@@ -78,11 +49,11 @@ export class UserService {
     const [at, rt] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
         secret: this.config.get<string>('AT_SECRET'),
-        expiresIn: '15m',
+        expiresIn: '5m',
       }),
       this.jwtService.signAsync(jwtPayload, {
         secret: this.config.get<string>('RT_SECRET'),
-        expiresIn: '7d',
+        expiresIn: '15d',
       }),
     ]);
 
@@ -100,7 +71,6 @@ export class UserService {
 
   async login(credentials: LoginCredentialsDto) {
     const { email, password } = credentials;
-
     const user = await this.userRepository.findOne({ email });
 
     if (!user)
@@ -112,21 +82,17 @@ export class UserService {
     if (hashedPassword === user.password) {
       const tokens = await this.getTokens(user.id, user.email);
       await this.updateRtHash(user.id, tokens.refresh_token);
-      delete user.salt;
-      delete user.password;
-      delete user.hashedRt;
       return {
         user: user,
         refresh_token: tokens.refresh_token,
         access_token: tokens.access_token,
       };
-    } else throw new NotFoundException('Incorrect email or password');
+    }
+    else
+      throw new NotFoundException('Incorrect email or password');
   }
 
-  async refreshTokens() {
-    // Getting user from request, thanks to the guard.
-    const user = this.request.user;
-
+  async refreshTokens(user: UserEntity & { refreshToken: string }) {
     if (!user || !user.hashedRt) throw new ForbiddenException('Access Denied');
 
     const rtMatches = await argon.verify(user.hashedRt, user.refreshToken);
@@ -156,11 +122,11 @@ export class UserService {
     return await this.userRepository.find();
   }
 
-  async logOut() {
-    if (this?.request?.user) {
+  async logOut(user: UserEntity) {
+    if (user) {
       await this.userRepository.update(
         {
-          id: this.request.user.id,
+          id: user.id,
         },
         {
           hashedRt: null,
@@ -171,14 +137,22 @@ export class UserService {
     throw new UnauthorizedException();
   }
 
-  updateOne(id: string, user) {
+  async updateProfileImage( id: string, file: Express.Multer.File) {
+    if(!file) throw new NotFoundException('No file found!');
+    const imagePath = file.path.replace('public', '').split('\\').join('/');
+    const status = await this.userRepository.update(id, { profileImage: imagePath });
+    if (!status.affected) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    return status;
+  }
+
+  updateOne(id: string, user: UserEntity): any {
     delete user.email;
     delete user.password;
-    delete user.role;
-    return from(this.userRepository.update(id, user)).pipe(
-      switchMap(() => this.findOne(id))
-    );
+    return this.userRepository.update(id, user);
   }
+
   findOne(id: string): any {
     return this.userRepository.findOne(id);
   }
@@ -187,27 +161,25 @@ export class UserService {
     user.ratingAsSeller = round((user.ratingAsSeller * user.reviewsCountAsSeller++ + review.rating) / user.reviewsCountAsSeller);
     return this.userRepository.save(user);
   }
-  
-  decrementReviewsAsAseller(id: string) {
-    const query = this.userRepository.createQueryBuilder()
-      .update(UserEntity)
-      .set({
-        reviewsCountAsSeller: () => "reviewsCountAsSeller - 1"
-      })
-      .where("id = :id", { id: id })
-      .andWhere("reviewsCountAsSeller > 0")
-    return query.execute();
+
+  decrementReviewsAsAseller(user: UserEntity, review: Review) {
+    if (user.reviewsCountAsSeller > 1)
+      user.ratingAsSeller = round((user.ratingAsSeller * user.reviewsCountAsSeller-- - review.rating) / user.reviewsCountAsSeller);
+    else {
+      user.ratingAsSeller = 0;
+      user.reviewsCountAsSeller = 0;
+    }
+    return this.userRepository.save(user);
   }
 
-  decrementReviewsAsAbuyer(id: string) {
-    const query = this.userRepository.createQueryBuilder()
-      .update(UserEntity)
-      .set({
-        reviewsCountAsBuyer: () => "reviewsCountAsBuyer - 1"
-      })
-      .where("id = :id", { id: id })
-      .andWhere("reviewsCountAsBuyer > 0")
-    return query.execute();
+  decrementReviewsAsAbuyer(user: UserEntity, review: Review) {
+    if (user.reviewsCountAsBuyer > 1)
+      user.ratingAsBuyer = round((user.ratingAsBuyer * user.reviewsCountAsBuyer-- - review.rating) / user.reviewsCountAsBuyer);
+    else {
+      user.ratingAsBuyer = 0;
+      user.reviewsCountAsBuyer = 0;
+    }
+    return this.userRepository.save(user);
   }
 
   incrementReviewsAsAbuyer(user: UserEntity, review: Review) {

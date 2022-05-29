@@ -1,4 +1,4 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
+import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString, Max, Min } from "class-validator";
 import { ServiceCategory } from "src/service_categories/entities/service_category.entity";
 
 export class CreateServiceDto {
@@ -14,6 +14,7 @@ export class CreateServiceDto {
     categoryId: string;
 
     @IsNumber()
+    @Min(0)
     @IsNotEmpty()
     price: number;
 }

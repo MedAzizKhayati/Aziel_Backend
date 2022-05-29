@@ -18,7 +18,8 @@ export class Review extends TimestampEntities {
         (service) => service.reviews,
         {
             nullable: true,
-            eager: true
+            eager: true,
+            cascade: false
         }
     )
     service: ServicesEntity
@@ -28,7 +29,8 @@ export class Review extends TimestampEntities {
         (user) => user.givenReviews,
         {
             nullable: false,
-            eager: true
+            eager: true,
+            cascade: false
         }
     )
     owner: UserEntity;
@@ -38,7 +40,8 @@ export class Review extends TimestampEntities {
         (user) => user.receivedReviews,
         {
             nullable: false,
-            eager: true
+            eager: true,
+            cascade: false
         }
     )
     target: UserEntity;
