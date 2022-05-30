@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isNumber } from 'class-validator';
 import { round } from 'src/generics/helpers';
 import { Review } from 'src/reviews/entities/review.entity';
-import { ReviewsService } from 'src/reviews/reviews.service';
+import { ServiceCategory } from 'src/service_categories/entities/service_category.entity';
 import { ServiceCategoriesService } from 'src/service_categories/service_categories.service';
 import { UserEntity } from 'src/user/entities/user.entity';
 import { UserRoleEnum } from 'src/user/enums/user-role.enum';
@@ -66,7 +66,7 @@ export class ServicesService {
   }
 
   search(query: string, take: number = 10, page: number = 1) {
-    if(!query) return [];
+    if (!query) return [];
     return this.findByCondition(
       [
         { title: Like(`%${query}%`) },
@@ -86,14 +86,23 @@ export class ServicesService {
   }
 
   async update(id: string, updateServiceDto: UpdateServiceDto) {
-    const newService = await this.servicesRepository.preload({
-      id,
-      ...updateServiceDto
-    });
-    if (!newService) {
+    let category: ServiceCategory, updatedService;
+    const categoryId = updateServiceDto.categoryId;
+    delete updateServiceDto.categoryId;
+
+    if (updateServiceDto.categoryId)
+      category = await this.serviceCategoriesRepository.findOne(categoryId);
+
+    if (category)
+      updatedService = await this.servicesRepository.update(id, {
+        ...updateServiceDto, category
+      });
+    else
+      updatedService = await this.servicesRepository.update(id, updateServiceDto);
+    if (!updatedService) {
       throw new NotFoundException(`Service with ID ${id} not found`);
     }
-    return newService;
+    return updatedService;
   }
 
   async remove(id: string) {
@@ -126,13 +135,14 @@ export class ServicesService {
     return this.servicesRepository.restore(id);
   }
 
-  async getCvs(user: UserEntity): Promise<ServicesEntity[]> {
+  async getUserServices(user: UserEntity): Promise<ServicesEntity[]> {
     if (user.role === UserRoleEnum.ADMIN)
       return await this.servicesRepository.find();
     return await this.servicesRepository.find({ user });
   }
 
-  async uploadImage(file: Express.Multer.File, id: string) {
+  async uploadImage(id: string, file: Express.Multer.File) {
+    if (!file) throw new NotFoundException('No file found!');
     const imagePath = file.path.replace('public', '').split('\\').join('/');
     const status = await this.servicesRepository.update(id, { imagePath });
     if (!status.affected) {

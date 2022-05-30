@@ -33,10 +33,9 @@ export class ReviewsService {
 
     // Service can be null
     review.service = await this.serviceService.findOne(createReviewDto.serviceId);
-
     if (review.service) {
       await this.serviceService.addReview(review.service, review);
-      const res = await this.userService.incrementReviewsAsAseller(review.target, review);
+      await this.userService.incrementReviewsAsAseller(review.target, review);
     }
     else {
       await this.userService.incrementReviewsAsAbuyer(review.target, review);
@@ -70,11 +69,11 @@ export class ReviewsService {
       throw new Error('Review not found');
 
     if (review.service) {
-      await this.userService.decrementReviewsAsAseller(review.target.id);
+      await this.userService.decrementReviewsAsAseller(review.target, review);
       await this.serviceService.removeReview(review.service, review);
     }
     else
-      await this.userService.decrementReviewsAsAbuyer(review.target.id);
+      await this.userService.decrementReviewsAsAbuyer(review.target, review);
 
     return await this.reviewsRepository.delete(id);
   }

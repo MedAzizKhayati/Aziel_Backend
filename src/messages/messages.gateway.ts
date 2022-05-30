@@ -1,9 +1,8 @@
 import { WebSocketGateway, SubscribeMessage, MessageBody, WebSocketServer } from '@nestjs/websockets';
 import { MessagesService } from './messages.service';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Server } from 'socket.io';
-import { UserService } from 'src/user/user.service';
 
 @WebSocketGateway({ namespace: 'chat' })
 @Injectable()

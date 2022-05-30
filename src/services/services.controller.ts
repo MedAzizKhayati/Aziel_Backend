@@ -83,7 +83,10 @@ export class ServicesController {
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, updateServiceDto: UpdateServiceDto) {
+  update(
+    @Param('id') id: string,
+    @Body() updateServiceDto: UpdateServiceDto
+  ) {
     return this.servicesService.update(id, updateServiceDto);
   }
 
@@ -108,13 +111,13 @@ export class ServicesController {
     }),
     fileFilter: imageFileFilter,
     limits: {
-      fileSize: 4_000_000, // 4MB
+      fileSize: 8_000_000, // 8MB
     }
   }))
   uploadImage(
     @UploadedFile() file: Express.Multer.File,
     @Param('id') id: string,
   ) {
-    return this.servicesService.uploadImage(file, id);
+    return this.servicesService.uploadImage(id, file);
   }
 }

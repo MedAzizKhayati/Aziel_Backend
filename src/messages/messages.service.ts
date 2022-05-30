@@ -6,6 +6,7 @@ import { In, Repository } from 'typeorm';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Message } from './entities/message.entity';
+import { Server } from 'socket.io';
 
 @Injectable()
 export class MessagesService {
@@ -16,7 +17,7 @@ export class MessagesService {
     private readonly userRepository: Repository<UserEntity>,
   ) { }
 
-  async create(createMessageDto: CreateMessageDto, server: any) {
+  async create(createMessageDto: CreateMessageDto, server: Server) {
     const owner = await this.userRepository.findOne(createMessageDto.ownerId);
     if (!owner)
       throw new Error('Owner not found');
