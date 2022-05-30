@@ -22,7 +22,9 @@ export class OrdersService {
   }
   
   async findAll(take: number = 10, page: number = 1): Promise<OrdersEntity[]> {
+    console.log("all orders");
     return this.findByCondition({}, take, page);
+
   }
 
   async findOne(id: string): Promise<OrdersEntity> {

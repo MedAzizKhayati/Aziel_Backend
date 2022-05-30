@@ -38,11 +38,15 @@ export class OrdersController {
     return this.ordersService.findByBuyer(id);
   }
 
-  @Get()
-  findAll() {
-    return this.ordersService.findAll();
+  @Get('all/?:limit/?:page')
+  findAll(
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+  ): Promise<OrdersEntity[]> {
+    console.log("all orders");
+    return this.ordersService.findAll(+limit, +page);
   }
-
+  
   @Get(':id')
   findOne(@Param('id') id: string) :Promise<OrdersEntity>{
     return this.ordersService.findOne(id);

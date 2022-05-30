@@ -56,7 +56,7 @@ async function bootstrap() {
 
     console.log('Services seeded successfully....');
 
-    // Seed reviews
+    // Seed reviews == Create some reviews for the users
     const count = 5_000
     for (let i = 1; i < count; i++) {
         const review = new CreateReviewDto();
@@ -74,6 +74,7 @@ async function bootstrap() {
             reviewsService.create(review, owner);
     }
 
+    // DELETE ALL REVIEWS
     // const reviews = await reviewsService.findAll();
     // for(const review of reviews){
     //     await reviewsService.remove(review.id);
