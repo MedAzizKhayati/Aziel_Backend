@@ -3,25 +3,50 @@ import { TimestampEntities } from 'src/generics/timestamp.entities';
 import { UserEntity } from "src/user/entities/user.entity";
 import { ServicesEntity } from "src/services/entities/service.entity";
 import { OrderStatus } from "../enums/order-status.enum";
+import { getTomorrowsDateSQL } from "src/generics/helpers";
 
 @Entity('orders')
 export class OrdersEntity extends TimestampEntities {
-
     @Column({
         type: 'double'
     })
     total: number;
 
     @Column({
+        type: 'double'
+    })
+    price: number;
+
+    @Column()
+    title: string;
+
+    @Column({
         type: 'enum',
         enum: OrderStatus,
-        default: OrderStatus.InProgress,
+        default: OrderStatus.IN_PROGRESS,
     })
     status: String;
 
     @Column({
-     })
-     description: String;
+        type: 'text',
+    })
+    description: String;
+
+    @Column({
+        type: 'text',
+    })
+    deliveryDescription: String;
+
+    @Column({
+        default: '',
+    })
+    deliveryFile: String;
+
+    @Column({
+        type: 'timestamp',
+        default: getTomorrowsDateSQL(),
+    })
+    deliveryDate: Date;
 
     @ManyToOne(
         () => UserEntity,
@@ -43,5 +68,4 @@ export class OrdersEntity extends TimestampEntities {
         }
     )
     service: ServicesEntity;
-
 }

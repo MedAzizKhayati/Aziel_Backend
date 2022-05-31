@@ -31,11 +31,23 @@ export class OrdersController {
     return await this.ordersService.restoreOrder(id);
   }
 
-  @Get('user/:id')
+  @Get('user/:limit/:page')
   findByBuyer(
-    @Param('id') id: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+    @User() user: UserEntity,
   ): Promise<OrdersEntity[]> {
-    return this.ordersService.findByBuyer(id);
+    return this.ordersService.findByBuyer(user.id, +limit, +page);
+  }
+
+  @Get('seller/:limit/:page')
+  findBySeller(
+
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+    @User() user: UserEntity,
+  ): Promise<OrdersEntity[]> {
+    return this.ordersService.findBySeller(user.id, +limit, +page);
   }
 
   @Get('all/?:limit/?:page')
@@ -43,12 +55,12 @@ export class OrdersController {
     @Param('limit') limit: number,
     @Param('page') page: number,
   ): Promise<OrdersEntity[]> {
-    console.log("all orders");
     return this.ordersService.findAll(+limit, +page);
   }
   
   @Get(':id')
   findOne(@Param('id') id: string) :Promise<OrdersEntity>{
+    console.log(id);
     return this.ordersService.findOne(id);
   }
 
@@ -64,6 +76,7 @@ export class OrdersController {
   }
 
   @Delete('soft/:id')
+  @Roles(UserRoleEnum.ADMIN)
   async deleteService(
     @Param('id') id: string,
   ) {

@@ -1,6 +1,7 @@
 import { TimestampEntities } from "src/generics/timestamp.entities";
+import { OrdersEntity } from "src/orders/entities/order.entity";
 import { UserEntity } from "src/user/entities/user.entity";
-import { BeforeInsert, Column, Entity, ManyToOne } from "typeorm";
+import { BeforeInsert, Column, Entity, JoinColumn, ManyToOne, OneToOne } from "typeorm";
 
 @Entity('messages')
 export class Message extends TimestampEntities {
@@ -34,6 +35,21 @@ export class Message extends TimestampEntities {
         }
     )
     target: UserEntity;
+
+    @Column({
+        default: '',
+    })
+    attachedFile: string;
+
+    @OneToOne(
+        () => OrdersEntity,
+        {
+            eager: true,
+            cascade: true,
+        }
+    )
+    @JoinColumn()
+    customOrder: OrdersEntity;
 
     @BeforeInsert()
     async setChatId() {

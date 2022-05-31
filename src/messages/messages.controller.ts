@@ -3,6 +3,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { User } from 'src/user/decorators/user.param-decorater';
 import { UserEntity } from 'src/user/entities/user.entity';
 import { RolesGuard } from 'src/user/guards/roles.guard';
+import { CreateMessageDto } from './dto/create-message.dto';
 import { MessagesService } from './messages.service';
 
 @UseGuards(AuthGuard('jwt'), RolesGuard)
@@ -15,6 +16,14 @@ export class MessagesController {
         @User() user: UserEntity,
     ) {
         return this.messagesService.getUnreadMessagesCount(user.id);
+    }
+
+    @Post('')
+    create(
+        @User() user: UserEntity,
+        @Body() message: CreateMessageDto,
+    ){
+        return this.messagesService.create(message, null);
     }
 
     @Post('/mark-as-seen')

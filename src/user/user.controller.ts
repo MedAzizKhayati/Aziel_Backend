@@ -20,7 +20,7 @@ import { UserEntity } from './entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { CastToUserDTO } from './interceptors/user.interceptor';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {  Observable, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import path, { join } from 'path';
 import { diskStorage } from 'multer';
 import { RolesGuard } from './guards/roles.guard';
@@ -99,5 +99,23 @@ export class UserController {
   ) {
     return this.userService.updateProfileImage(user.id, file);
   }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('notification/register')
+  registerNotification(
+    @User() user,
+    @Body() data: any,
+  ) {
+    return this.userService.registerNotificationToken(user.id, data.notificationToken);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('notification/test')
+  testNotification(
+    @User() user: UserEntity,
+  ){
+    return this.userService.testNotification(user);
+  }
+
 }
 

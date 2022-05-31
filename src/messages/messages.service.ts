@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { isNumber } from 'class-validator';
 import { UserEntity } from 'src/user/entities/user.entity';
@@ -7,6 +7,12 @@ import { CreateMessageDto } from './dto/create-message.dto';
 import { UpdateMessageDto } from './dto/update-message.dto';
 import { Message } from './entities/message.entity';
 import { Server } from 'socket.io';
+import { OrderStatus } from 'src/orders/enums/order-status.enum';
+import { OrdersService } from 'src/orders/orders.service';
+import { SetOrderStatusDto } from './dto/set-order-status.dto';
+import axios from 'axios';
+import { UserService } from 'src/user/user.service';
+import { OrdersEntity } from 'src/orders/entities/order.entity';
 
 @Injectable()
 export class MessagesService {
@@ -15,6 +21,8 @@ export class MessagesService {
     private readonly messagesRepository: Repository<Message>,
     @InjectRepository(UserEntity)
     private readonly userRepository: Repository<UserEntity>,
+    private readonly ordersService: OrdersService,
+    private readonly userService: UserService,
   ) { }
 
   async create(createMessageDto: CreateMessageDto, server: Server) {
@@ -27,9 +35,17 @@ export class MessagesService {
     let message = this.messagesRepository.create(createMessageDto);
     message.owner = owner;
     message.target = target;
+    if (message.customOrder)
+      message.customOrder = await this.ordersService.create(
+        createMessageDto.customOrder,
+        target,
+        OrderStatus.WAITING
+      );
 
     message = await this.messagesRepository.save(message);
-    server.emit(message.chatId, this.getMessageDTO(message));
+    server && server.emit(message.chatId, this.getMessageDTO(message));
+    this.userService.sendNotification(target, owner.firstName, message.message, message);
+    return message;
   }
 
   findWithOptions(options: any, take: number = 10, page: number = 1) {
@@ -61,12 +77,13 @@ export class MessagesService {
   getMessageDTO(message: Message) {
     return {
       message: message.message,
-      ownerId: message.owner.id,
-      targetId: message.target.id,
+      ownerId: message.owner?.id,
+      targetId: message.target?.id,
       createdAt: message.createdAt,
       id: message.id,
       chatId: message.chatId,
       seen: message.seen,
+      customOrder: message.customOrder,
     }
   }
 
@@ -95,6 +112,30 @@ export class MessagesService {
       )
       .getRawOne();
     return res;
+  }
+
+  async setOrderStatus(setOrderStatus: SetOrderStatusDto, server: Server) {
+    let order: OrdersEntity;
+    let message: Message;
+    if (setOrderStatus.status === OrderStatus.IN_PROGRESS)
+      order = await this.ordersService.acceptOrder(setOrderStatus.orderId);
+    else
+      order = await this.ordersService.changeOrderStatus(setOrderStatus.orderId, setOrderStatus.status);
+    if (!setOrderStatus.chatId)
+      message = await this.messagesRepository.findOne({
+        where: {
+          customOrder: order,
+        },
+      });
+    else
+      message = await this.messagesRepository.findOne(setOrderStatus.chatId);
+    server && server.emit(message.chatId, this.getMessageDTO(message));
+    this.userService.sendNotification(
+      order.service.user,
+      order.buyer.firstName + ' ' + order.buyer.lastName,
+      'has placed an order.', message
+    );
+    return message;
   }
 
   findOne(id: number) {

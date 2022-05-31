@@ -17,6 +17,7 @@ import { ConfigService } from '@nestjs/config';
 import { sendEmail } from 'src/utils/sendEmail';
 import { round } from 'src/generics/helpers';
 import { Review } from 'src/reviews/entities/review.entity';
+import axios from 'axios';
 
 @Injectable()
 export class UserService {
@@ -137,8 +138,8 @@ export class UserService {
     throw new UnauthorizedException();
   }
 
-  async updateProfileImage( id: string, file: Express.Multer.File) {
-    if(!file) throw new NotFoundException('No file found!');
+  async updateProfileImage(id: string, file: Express.Multer.File) {
+    if (!file) throw new NotFoundException('No file found!');
     const imagePath = file.path.replace('public', '').split('\\').join('/');
     const status = await this.userRepository.update(id, { profileImage: imagePath });
     if (!status.affected) {
@@ -186,4 +187,64 @@ export class UserService {
     user.ratingAsBuyer = round((user.ratingAsBuyer * user.reviewsCountAsBuyer++ + review.rating) / user.reviewsCountAsBuyer);
     return this.userRepository.save(user);
   }
+
+  async updateBalance(userId: string, amount: number) {
+    const user = await this.userRepository.findOne(userId);
+    if (!user) throw new NotFoundException('User not found');
+    user.balance += amount;
+    if (user.balance < 0)
+      throw new Error("You don't have sufficient balance!");
+    return this.userRepository.save(user);
+  }
+
+  async registerNotificationToken(userId: string, token: string) {
+    if (token && userId)
+      return this.userRepository.update(userId, { notificationToken: token });
+    throw new NotFoundException('User not found');
+  }
+
+  async testNotification(user: UserEntity) {
+    axios.post(
+      'https://exp.host/--/api/v2/push/send',
+      {
+        to: user.notificationToken,
+        title: 'Aziel Notification',
+        body: 'This is an Aziel Notificaiton.',
+        data: {
+          message: 'Test a message',
+        },
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    return "Notification Sent";
+  }
+
+  async sendNotification(user: UserEntity | string, title: string, message: string, data: object) {
+    if (typeof user === 'string') {
+      const userId = user;
+      const userData = await this.userRepository.findOne(userId);
+      if (!userData) throw new NotFoundException('User not found');
+      user = userData;
+    }
+    axios.post(
+      'https://exp.host/--/api/v2/push/send',
+      {
+        to: user.notificationToken,
+        title: title,
+        body: message,
+        data,
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      }
+    );
+    return "Notification Sent";
+  }
+
 }

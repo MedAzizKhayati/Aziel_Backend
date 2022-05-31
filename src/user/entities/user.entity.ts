@@ -1,4 +1,4 @@
-import { OneToMany, Column, Entity, BeforeInsert, BeforeUpdate } from 'typeorm';
+import { OneToMany, Column, Entity, BeforeInsert, BeforeUpdate, AfterLoad } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { TimestampEntities } from 'src/generics/timestamp.entities';
 import { UserRoleEnum } from 'src/user/enums/user-role.enum';
@@ -68,7 +68,7 @@ export class UserEntity extends TimestampEntities {
   @Column({ nullable: true })
   hashedRt: string;
 
-  @Column({ 
+  @Column({
     nullable: false,
     default: "",
   })
@@ -126,6 +126,12 @@ export class UserEntity extends TimestampEntities {
   })
   reviewsCountAsSeller: number;
 
+  @Column({
+    default: '',
+  })
+  notificationToken: string;
+
+
   @BeforeUpdate()
   @BeforeInsert()
   async capitalizeName() {
@@ -133,10 +139,18 @@ export class UserEntity extends TimestampEntities {
     this.lastName = capitalizeWords(this.lastName);
   }
 
+  private tempPassword: string;
+
+  @AfterLoad()
+  private loadTempPassword(): void {
+    this.tempPassword = this.password;
+  }
+
   @BeforeUpdate()
   @BeforeInsert()
   async hashPassword() {
-    if (this.password) {
+    if (this.tempPassword !== this.password) {
+      console.log('Hashing password');     
       this.salt = await bcrypt.genSalt(10);
       this.password = await bcrypt.hash(this.password, this.salt);
     }

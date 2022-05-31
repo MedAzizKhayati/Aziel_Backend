@@ -1,6 +1,11 @@
 import { SelectQueryBuilder } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 
+
+export const ONE_DAY = 1000 * 60 * 60 * 24;
+export const getTomorrowsDateSQL = () => 
+    new Date(+new Date() + ONE_DAY).toISOString().slice(0, 19).replace('T', ' ');
+
 // This function gets a string and capitializes each word in the string. (Ex. "hello world" => "Hello World")
 export const capitalizeWords = (str: string) => {
     const arr = str.split(' ');

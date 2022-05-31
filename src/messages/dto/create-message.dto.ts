@@ -1,4 +1,6 @@
-import { IsNotEmpty, IsString, MaxLength } from "class-validator";
+import { Type } from "class-transformer";
+import { IsNotEmpty, IsOptional, IsString, MaxLength, ValidateNested } from "class-validator";
+import { CreateOrderDto } from "src/orders/dto/create-order.dto";
 
 export class CreateMessageDto {
     @IsNotEmpty()
@@ -12,4 +14,9 @@ export class CreateMessageDto {
     @IsNotEmpty()
     @IsString()
     ownerId: string;
+
+    @IsOptional()
+    @ValidateNested()
+    @Type(() => CreateOrderDto)
+    customOrder: CreateOrderDto
 }
