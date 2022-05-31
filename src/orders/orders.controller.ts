@@ -9,18 +9,19 @@ import { UserEntity } from 'src/user/entities/user.entity';
 import { OrdersEntity } from './entities/order.entity';
 import { Roles } from 'src/user/decorators/roles.metadata';
 import { UserRoleEnum } from 'src/user/enums/user-role.enum';
+import { OrderDeliveryDto } from './dto/order-delivery.dto';
 
 @Controller('orders')
 @UseGuards(AuthGuard("jwt"), RolesGuard)
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(private readonly ordersService: OrdersService) { }
 
   @Post()
   create(@Body() createOrderDto: CreateOrderDto,
-  @User() user: UserEntity,
+    @User() user: UserEntity,
 
   ): Promise<OrdersEntity> {
-    return this.ordersService.create(createOrderDto,user);
+    return this.ordersService.create(createOrderDto, user);
   }
 
   @Post('recover/:id')
@@ -31,7 +32,7 @@ export class OrdersController {
     return await this.ordersService.restoreOrder(id);
   }
 
-  @Get('user/:limit/:page')
+  @Get('buyer/:limit/:page')
   findByBuyer(
     @Param('limit') limit: number,
     @Param('page') page: number,
@@ -40,15 +41,44 @@ export class OrdersController {
     return this.ordersService.findByBuyer(user.id, +limit, +page);
   }
 
+  @Get('buyer/before/:id/:limit/:page')
+  findByBuyerBefore(
+    @Param('id') id: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+    @User() user: UserEntity,
+  ): Promise<OrdersEntity[]> {
+    return this.ordersService.findByBuyerBefore(id, user.id, +limit, +page);
+  }
+
   @Get('seller/:limit/:page')
   findBySeller(
-
     @Param('limit') limit: number,
     @Param('page') page: number,
     @User() user: UserEntity,
   ): Promise<OrdersEntity[]> {
     return this.ordersService.findBySeller(user.id, +limit, +page);
   }
+
+  @Get('seller/before/:id/:limit/:page')
+  findBySellerBefore (
+    @Param('id') id: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+    @User() user: UserEntity,
+  ): Promise<OrdersEntity[]> {
+    return this.ordersService.findBySellerBefore(id, user.id, +limit, +page);
+  }
+
+  @Post('deliver/:id')
+  deliverOrder(
+    @Param('id') id: string,
+    @User() user: UserEntity,
+    @Body() delivery: OrderDeliveryDto
+  ): Promise<OrdersEntity> {
+    return this.ordersService.deliverOrder(id,delivery, user);
+  }
+
 
   @Get('all/?:limit/?:page')
   findAll(
@@ -57,9 +87,9 @@ export class OrdersController {
   ): Promise<OrdersEntity[]> {
     return this.ordersService.findAll(+limit, +page);
   }
-  
+
   @Get(':id')
-  findOne(@Param('id') id: string) :Promise<OrdersEntity>{
+  findOne(@Param('id') id: string): Promise<OrdersEntity> {
     console.log(id);
     return this.ordersService.findOne(id);
   }

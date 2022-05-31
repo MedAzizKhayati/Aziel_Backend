@@ -3,9 +3,11 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { isNumber } from 'class-validator';
 import { ServicesService } from 'src/services/services.service';
 import { UserEntity } from 'src/user/entities/user.entity';
+import { UserRoleEnum } from 'src/user/enums/user-role.enum';
 import { UserService } from 'src/user/user.service';
-import { Repository } from 'typeorm';
+import { LessThan, Repository } from 'typeorm';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { OrderDeliveryDto } from './dto/order-delivery.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrdersEntity } from './entities/order.entity';
 import { OrderStatus } from './enums/order-status.enum';
@@ -57,7 +59,7 @@ export class OrdersService {
     return await this.ordersRepository.delete(id);
   }
 
-  async findByCondition(condition: any, take: number = 10, page: number = 1, orderBy = {}): Promise<OrdersEntity[]> {
+  async findByCondition(condition: any, take: number = 10, page: number = 1, orderBy = {}, conditions = {}): Promise<OrdersEntity[]> {
     if (!take || !isNumber(take) || take < 0)
       take = 10;
     if (!page || !isNumber(page) || page < 1)
@@ -66,7 +68,8 @@ export class OrdersService {
       where: condition,
       take,
       skip: (page - 1) * take,
-      order: orderBy
+      order: orderBy,
+      ...conditions
     });
   }
 
@@ -76,9 +79,64 @@ export class OrdersService {
   }
 
   findBySeller(sellerId: string, take: number = 10, page: number = 1): Promise<OrdersEntity[]> {
-    return this.findByCondition({ service: { user: { id: sellerId } } }, take, page, { createdAt: 'DESC' });
+    return this.findByCondition(
+      { service: { user: { id: sellerId } } },
+      take,
+      page,
+      { createdAt: 'DESC' },
+      { relations: ['service', 'service.user'] }
+    );
+  }
+  async findByBuyerBefore(orderId: string, buyerId: string, take: number = 10, page: number = 1): Promise<OrdersEntity[]> {
+    if (!orderId)
+      return this.findByBuyer(buyerId, take, page);
+
+    const order = await this.ordersRepository.findOne(orderId);
+    return this.findByCondition(
+      {
+        buyer: { id: buyerId },
+        createdAt: LessThan(order.createdAt)
+      },
+      take,
+      page,
+      { createdAt: 'DESC' }
+    );
   }
 
+  async deliverOrder(id: string, delivery: OrderDeliveryDto, user: UserEntity) {
+    let order = await this.ordersRepository.findOne(id);
+    if (!order)
+      throw new NotFoundException('Order does not exist');
+    if (
+      order.service.user.id !== user.id ||
+      order.status !== OrderStatus.IN_PROGRESS
+    )
+      throw new NotFoundException('You are not allowed to deliver this order.');
+    order.status = OrderStatus.COMPLETED;
+    order.deliveredAt = new Date();
+    order.deliveryDescription = delivery.deliveryDescription;
+    
+    order = await this.ordersRepository.save(order);
+    this.userService.sendNotification(order.buyer, 'Delivery Ready', `Order ${order.id} has been delivered.`, {});
+    return order;
+  }
+
+  async findBySellerBefore(orderId: string, sellerId: string, take: number = 10, page: number = 1): Promise<OrdersEntity[]> {
+    if (!orderId)
+      return this.findBySeller(sellerId, take, page);
+
+    const order = await this.ordersRepository.findOne(orderId);
+    return this.findByCondition(
+      {
+        service: { user: { id: sellerId } },
+        createdAt: LessThan(order.createdAt)
+      },
+      take,
+      page,
+      { createdAt: 'DESC' },
+      { relations: ['service', 'service.user'] }
+    );
+  }
 
   async softDeleteOrder(id: string) {
     const order = await this.ordersRepository.findOne(id);
@@ -113,7 +171,7 @@ export class OrdersService {
     order.status = OrderStatus.IN_PROGRESS;
     order = await this.ordersRepository.save(order);
 
-    return {...order, buyer, service};
+    return { ...order, buyer, service };
   }
 
   async restoreOrder(id: string) {

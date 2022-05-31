@@ -48,6 +48,12 @@ export class OrdersEntity extends TimestampEntities {
     })
     deliveryDate: Date;
 
+    @Column({
+        type: 'timestamp',
+        default: null,
+    })
+    deliveredAt: Date;
+
     @ManyToOne(
         () => UserEntity,
         (user) => user.orders,
