@@ -43,12 +43,16 @@ export class ReviewsService {
     return this.reviewsRepository.save(review);
   }
 
-  findByCondition(condition: any, page: number, limit: number) {
+  findByCondition(condition: any, page: number = 1, limit: number = 10) {
     return this.reviewsRepository.find({
       where: condition,
       skip: limit * (page - 1),
       take: limit,
     });
+  }
+
+  findByServiceId(serviceId: string, page: number = 1, limit: number = 10) {
+    return this.findByCondition({ service: { id: serviceId } }, page, limit);
   }
 
   findAll() {

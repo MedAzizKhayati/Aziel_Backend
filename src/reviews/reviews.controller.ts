@@ -25,6 +25,15 @@ export class ReviewsController {
     return this.reviewsService.findAll();
   }
 
+  @Get('service/:id/?:limit/?:page')
+  findByServiceId(
+    @Param('id') id: string,
+    @Param('limit') limit: number,
+    @Param('page') page: number,
+  ) {
+    return this.reviewsService.findByServiceId(id, +limit, +page);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.reviewsService.findOne(id);
