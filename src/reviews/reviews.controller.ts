@@ -31,7 +31,7 @@ export class ReviewsController {
     @Param('limit') limit: number,
     @Param('page') page: number,
   ) {
-    return this.reviewsService.findByServiceId(id, +limit, +page);
+    return this.reviewsService.findByServiceId(id, +page, +limit);
   }
 
   @Get(':id')

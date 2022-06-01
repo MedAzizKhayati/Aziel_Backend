@@ -51,8 +51,10 @@ export class ReviewsService {
     });
   }
 
-  findByServiceId(serviceId: string, page: number = 1, limit: number = 10) {
-    return this.findByCondition({ service: { id: serviceId } }, page, limit);
+  async findByServiceId(serviceId: string, page: number = 1, limit: number = 10) {
+    const reviews = await this.findByCondition({ service: { id: serviceId } }, page, limit);
+    console.log(page);
+    return reviews;
   }
 
   findAll() {

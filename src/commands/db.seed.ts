@@ -76,7 +76,7 @@ async function bootstrap() {
     }
     // Remove all reviews.
     // const reviews = await reviewsService.findAll();
-    // for(const review of reviews){
+    // for (const review of reviews) {
     //     await reviewsService.remove(review.id);
     // }
 
